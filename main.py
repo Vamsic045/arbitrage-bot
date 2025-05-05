@@ -1,8 +1,8 @@
+from config import ALERT_ON, AUTO_TRADE
 
-import ccxt
-import os
-from dotenv import load_dotenv
+if profit > threshold:
+    if ALERT_ON:
+        send_telegram_alert(...)
+    if AUTO_TRADE:
+        place_order(...)
 
-load_dotenv()
-
-print("Arbitrage bot started...")
