@@ -1,19 +1,16 @@
+from exchanges import get_price_binance, get_price_coindcx, get_price_bitget
 from telegram_alert import send_telegram_alert
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
+ask_b, bid_b = get_price_binance()
+ask_c, bid_c = get_price_coindcx()
+ask_g, bid_g = get_price_bitget()
 
-ALERT_ON = os.getenv("ALERT_ON", "true").lower() == "true"
-AUTO_TRADE = os.getenv("AUTO_TRADE", "false").lower() == "true"
+message = f"""
+📊 <b>Live Price Update</b>
+🔹 Binance: Ask {ask_b}, Bid {bid_b}
+🔹 CoinDCX: Ask {ask_c}, Bid {bid_c}
+🔹 Bitget: Ask {ask_g}, Bid {bid_g}
+"""
 
-# Example logic: you can replace this with real arbitrage logic later
-profit = 2.5  # Example profit percentage
-
-if profit >= 1.5:
-    if ALERT_ON:
-        send_telegram_alert(f"🚀 Arbitrage Opportunity Found!\nProfit: {profit}%")
-    if AUTO_TRADE:
-        print("Auto trading enabled (this is where order code would go).")
-else:
-    print("No profitable opportunity found.")
+print(message)
+send_telegram_alert(message)
