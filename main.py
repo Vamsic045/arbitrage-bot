@@ -1,14 +1,19 @@
-from config import ALERT_ON, AUTO_TRADE
-
-if profit > threshold:
-    if ALERT_ON:
-        send_telegram_alert(...)
-    if AUTO_TRADE:
-        place_order(...)
 from telegram_alert import send_telegram_alert
+import os
+from dotenv import load_dotenv
 
-# Arbitrage opportunity వచినప్పుడు:
-profit = 2.4  # ఉదాహరణకు
+load_dotenv()
+
+ALERT_ON = os.getenv("ALERT_ON", "true").lower() == "true"
+AUTO_TRADE = os.getenv("AUTO_TRADE", "false").lower() == "true"
+
+# Example logic: you can replace this with real arbitrage logic later
+profit = 2.5  # Example profit percentage
+
 if profit >= 1.5:
-    send_telegram_alert(f"🚀 Arbitrage Opportunity Found!\nProfit: {profit}%")
-
+    if ALERT_ON:
+        send_telegram_alert(f"🚀 Arbitrage Opportunity Found!\nProfit: {profit}%")
+    if AUTO_TRADE:
+        print("Auto trading enabled (this is where order code would go).")
+else:
+    print("No profitable opportunity found.")
