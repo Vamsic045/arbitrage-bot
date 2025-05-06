@@ -1,7 +1,8 @@
-pyrogram
+pyrogram==2.0.106
 tgcrypto
 python-dotenv
 moviepy
+googletrans==4.0.0rc1
 whisper
-googletrans==4.0.0-rc1
-gtts
+gTTS
+
