@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from googletrans import Translator
-from moviepy.editor import VideoFileClip
+from moviepy.editor import VideoFileClip, AudioFileClip  # Fixed missing import
 import whisper
 from gtts import gTTS
 
