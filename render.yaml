@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: telugu-video-translator-bot
+    env: python
+    buildCommand: ""
+    startCommand: python main.py
+    envVars:
+      - key: API_ID
+        value: 21232960
+      - key: API_HASH
+        value: 3b2158246c886c3ddc15f6c6b5912166
+      - key: BOT_TOKEN
+        value: 7802388978:AAGs1K461PsA6CgzqXaucWj5HkpCZJfApyI
