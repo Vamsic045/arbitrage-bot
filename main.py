@@ -1,107 +1,48 @@
-import ccxt, time, requests
+from pyrogram import Client, filters
+import whisper
+from googletrans import Translator
+from gtts import gTTS
+from moviepy.editor import VideoFileClip, AudioFileClip
+import os
 
-# Initialize trusted exchanges (15)
-exchanges = {
-    'Binance': ccxt.binance(),
-    'Kraken': ccxt.kraken(),
-    'KuCoin': ccxt.kucoin(),
-    'Gate.io': ccxt.gateio(),
-    'Bitfinex': ccxt.bitfinex(),
-    'OKX': ccxt.okx(),
-    'Bybit': ccxt.bybit(),
-    'Bitstamp': ccxt.bitstamp(),
-    'Poloniex': ccxt.poloniex(),
-    'MEXC': ccxt.mexc(),
-    'Coinbase': ccxt.coinbase(),
-    'Bittrex': ccxt.bittrex(),
-    'LBank': ccxt.lbank(),
-    'XT.COM': ccxt.xt(),
-    'Bitget': ccxt.bitget()
-}
+API_ID = 123456    # Your API ID
+API_HASH = "your_api_hash"
+BOT_TOKEN = "your_bot_token"
 
-# Telegram bot config
-bot_token = '7802388978:AAGs1K461PsA6CgzqXaucWj5HkpCZJfApyI'
-chat_id = '6738389946'
+app = Client("telugu_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-def fetch_usdt_to_inr():
-    try:
-        r = requests.get('https://api.binance.com/api/v3/ticker/price?symbol=USDTINR')
-        return float(r.json()['price'])
-    except:
-        return 83.0  # fallback rate
+model = whisper.load_model("base")
+translator = Translator()
 
-def fetch_order_prices(exchange, symbol):
-    try:
-        ob = exchange.fetch_order_book(symbol)
-        bid = ob['bids'][0][0] if ob['bids'] else None
-        ask = ob['asks'][0][0] if ob['asks'] else None
-        return bid, ask
-    except:
-        return None, None
+@app.on_message(filters.video)
+def handle_video(client, message):
+    # File names
+    file_id = message.video.file_unique_id
+    video_path = f"downloaded_videos/{file_id}.mp4"
+    audio_path = f"translated_videos/audio_{file_id}.mp3"
+    final_path = f"translated_videos/final_{file_id}.mp4"
 
-def send_telegram(message):
-    url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
-    requests.post(url, data={'chat_id': chat_id, 'text': message, 'parse_mode': 'Markdown'})
+    # Download video
+    message.download(video_path)
 
-while True:
-    usdt_inr = fetch_usdt_to_inr()
-    coins = ['1INCH', 'ACH', 'AGIX', 'GALA', 'DENT', 'TRX', 'VET', 'COTI', 'WAVES', 'WRX',
-             'XRP', 'SHIB', 'HBAR', 'BTT', 'DOGE', 'ICP', 'RUNE', 'SAND', 'MANA', 'MASK',
-             'ZIL', 'ENS', 'ANKR', 'XLM', 'CTSI', 'CELR', 'FET', 'CVC', 'STORJ', 'ARPA',
-             'OMG', 'BAND', 'NKN', 'ALGO', 'FLUX', 'XNO', 'CHZ', 'BICO', 'BLUR', 'REQ',
-             'SKL', 'HIGH', 'RLC', 'OCEAN', 'GLM', 'DGB', 'TRB', 'SPELL', 'ILV', 'PLA']
+    # Transcribe speech from video
+    result = model.transcribe(video_path)
+    text = result["text"]
 
-    opportunities = []
+    # Translate to Telugu
+    translated_text = translator.translate(text, dest='te').text
 
-    for coin in coins:
-        for buy_ex_name, buy_ex in exchanges.items():
-            for sell_ex_name, sell_ex in exchanges.items():
-                if buy_ex_name == sell_ex_name:
-                    continue
-                try:
-                    buy_bid, buy_ask = fetch_order_prices(buy_ex, f'{coin}/USDT')
-                    sell_bid, sell_ask = fetch_order_prices(sell_ex, f'{coin}/USDT')
-                    if not buy_ask or not sell_bid:
-                        continue
-                    if buy_ask * usdt_inr < 10 or buy_ask * usdt_inr > 1000:
-                        continue
-                    # Check withdrawal and deposit
-                    cur1 = buy_ex.fetch_currencies().get(coin, {})
-                    cur2 = sell_ex.fetch_currencies().get(coin, {})
-                    can_withdraw = cur1.get('withdraw', False)
-                    can_deposit = cur2.get('deposit', False)
-                    fee = cur1.get('fee', 0)
-                    if not (can_withdraw and can_deposit):
-                        continue
-                    # Calculate profit
-                    spend = 100000  # ₹
-                    coins_bought = spend / (buy_ask * usdt_inr)
-                    net_coins = coins_bought - fee
-                    revenue = net_coins * (sell_bid * usdt_inr)
-                    profit = revenue - spend
-                    if profit > 0:
-                        opportunities.append({
-                            'coin': coin,
-                            'buy_ex': buy_ex_name,
-                            'sell_ex': sell_ex_name,
-                            'buy_price': buy_ask * usdt_inr,
-                            'sell_price': sell_bid * usdt_inr,
-                            'profit': profit,
-                            'fee': fee,
-                            'dep': '✅' if can_deposit else '❌',
-                            'with': '✅' if can_withdraw else '❌'
-                        })
-                except Exception:
-                    continue
+    # Convert translated text to Telugu speech
+    tts = gTTS(translated_text, lang='te')
+    tts.save(audio_path)
 
-    # Send top 10 profitable
-    top = sorted(opportunities, key=lambda x: x['profit'], reverse=True)[:10]
-    for o in top:
-        msg = (f"🪙 *{o['coin']}* Arbitrage\n"
-               f"Buy @ {o['buy_ex']}: ₹{o['buy_price']:.2f}\n"
-               f"Sell @ {o['sell_ex']}: ₹{o['sell_price']:.2f}\n"
-               f"💰 Profit: ₹{o['profit']:.2f}\n"
-               f"📤 Withdraw: {o['with']} | 📥 Deposit: {o['dep']}\n"
-               f"💸 Withdraw Fee: {o['fee']} {o['coin']}")
-        send_telegram(msg)
-    time.sleep(60)
+    # Merge Telugu audio into original video
+    video = VideoFileClip(video_path)
+    audio = AudioFileClip(audio_path)
+    final_video = video.set_audio(audio)
+    final_video.write_videofile(final_path, codec='libx264', audio_codec='aac')
+
+    # Send final video back to user
+    message.reply_video(final_path)
+
+app.run()
