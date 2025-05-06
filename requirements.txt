@@ -2,7 +2,6 @@ pyrogram
 tgcrypto
 python-dotenv
 moviepy
+whisper
 googletrans==4.0.0-rc1
-gTTS
-openai-whisper
-torch
+gtts
