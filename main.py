@@ -1,15 +1,36 @@
-from exchanges import get_price_binance, get_price_coindcx, get_price_bitget
+
+from exchanges import *
 from telegram_alert import send_telegram_alert
 
-ask_b, bid_b = get_price_binance()
-ask_c, bid_c = get_price_coindcx()
-ask_g, bid_g = get_price_bitget()
+# Add exchanges to check here
+exchanges = {
+    "Binance": get_price_binance(),
+    "Coinbase": get_price_coinbase(),
+    "Kraken": get_price_kraken(),
+    "Bybit": get_price_bybit(),
+    "OKX": get_price_okx(),
+    "KuCoin": get_price_kucoin(),
+    "Bitfinex": get_price_bitfinex(),
+    "Bitstamp": get_price_bitstamp(),
+    "Huobi": get_price_huobi(),
+    "Gate.io": get_price_gateio(),
+}
 
-message = f"""
-📊 <b>Live Price Update</b>
-🔹 Binance: Ask {ask_b}, Bid {bid_b}
-🔹 CoinDCX: Ask {ask_c}, Bid {bid_c}
-🔹 Bitget: Ask {ask_g}, Bid {bid_g}
+buy_exchange = min(exchanges, key=lambda x: exchanges[x][0])
+sell_exchange = max(exchanges, key=lambda x: exchanges[x][1])
+
+buy_price = exchanges[buy_exchange][0]
+sell_price = exchanges[sell_exchange][1]
+
+profit_percent = (sell_price - buy_price) / buy_price * 100
+
+message = f""" 
+🚨 <b>Arbitrage Opportunity</b> 🚨
+
+Buy from: <b>{buy_exchange}</b> at <code>{buy_price}</code>
+Sell on: <b>{sell_exchange}</b> at <code>{sell_price}</code>
+
+💰 Estimated Profit: <b>{profit_percent:.2f}%</b>
 """
 
 print(message)
