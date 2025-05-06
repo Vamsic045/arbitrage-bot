@@ -2,7 +2,7 @@ services:
   - type: web
     name: telugu-video-translator-bot
     env: python
-    buildCommand: ""
+    buildCommand: pip install -r requirements.txt
     startCommand: python main.py
     envVars:
       - key: API_ID
@@ -11,3 +11,4 @@ services:
         value: 3b2158246c886c3ddc15f6c6b5912166
       - key: BOT_TOKEN
         value: 7802388978:AAGs1K461PsA6CgzqXaucWj5HkpCZJfApyI
+    plan: free  # Ensure you're using the free tier
