@@ -8,29 +8,25 @@ from moviepy.editor import VideoFileClip, AudioFileClip
 import whisper
 from gtts import gTTS
 
-# Load environment variables from .env file
+# Load .env variables
 load_dotenv()
 
-# API credentials from environment variables
 API_ID = int(os.getenv("API_ID"))
 API_HASH = os.getenv("API_HASH")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# Set up logging
 logging.basicConfig(level=logging.INFO)
 
-# Initialize Pyrogram client
-app = Client("telugu_video_translator_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+# Start bot
+app = Client("translator_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# Initialize Whisper (for audio transcription)
+# Load models
 whisper_model = whisper.load_model("base")
-
-# Initialize Google Translator
 translator = Translator()
 
 @app.on_message(filters.command("start"))
 def start(client, message: Message):
-    message.reply("Hi! Send me a video, and I'll translate the audio to Telugu.")
+    message.reply("👋 Send me a video and I will send it back with Telugu audio!")
 
 @app.on_message(filters.video)
 def handle_video(client, message: Message):
@@ -38,42 +34,44 @@ def handle_video(client, message: Message):
     video_path = app.download_media(video_file)
 
     try:
-        # Extract audio from video
+        # Extract audio
         video = VideoFileClip(video_path)
         audio_path = "audio.wav"
         video.audio.write_audiofile(audio_path)
 
-        # Transcribe audio using Whisper
+        # Transcribe
         result = whisper_model.transcribe(audio_path)
         original_text = result['text']
         logging.info(f"Transcribed: {original_text}")
 
-        # Translate to Telugu
-        translated_text = translator.translate(original_text, src='en', dest='te').text
-        logging.info(f"Telugu: {translated_text}")
+        # Translate
+        telugu_text = translator.translate(original_text, src='en', dest='te').text
+        logging.info(f"Translated: {telugu_text}")
 
-        # Convert text to speech in Telugu
-        tts = gTTS(translated_text, lang='te')
-        translated_audio_path = "translated_audio.mp3"
-        tts.save(translated_audio_path)
+        # Convert to speech
+        tts = gTTS(telugu_text, lang='te')
+        tts_path = "telugu_audio.mp3"
+        tts.save(tts_path)
 
-        # Overlay translated audio
-        final_video = video.set_audio(AudioFileClip(translated_audio_path))
-        final_video_path = "final_video.mp4"
-        final_video.write_videofile(final_video_path, codec="libx264", audio_codec="aac")
+        # Merge new audio
+        telugu_audio = AudioFileClip(tts_path)
+        final_video = video.set_audio(telugu_audio)
+        output_path = "output.mp4"
+        final_video.write_videofile(output_path, codec="libx264", audio_codec="aac")
 
-        # Send final video
-        message.reply_video(final_video_path)
+        # Send back
+        message.reply_video(output_path)
 
-        # Cleanup
+        # Clean up
         os.remove(video_path)
         os.remove(audio_path)
-        os.remove(translated_audio_path)
-        os.remove(final_video_path)
+        os.remove(tts_path)
+        os.remove(output_path)
 
     except Exception as e:
         logging.error(f"Error: {e}")
-        message.reply("❌ Error while processing your video.")
+        message.reply("❌ Error occurred while processing the video.")
 
 # Run bot
 app.run()
+
