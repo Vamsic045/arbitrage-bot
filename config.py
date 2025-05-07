@@ -1,0 +1,7 @@
+TOP_100_COINS = [
+    'BTC/USDT', 'ETH/USDT', 'BNB/USDT', 'XRP/USDT', 'SOL/USDT',
+    'ADA/USDT', 'DOGE/USDT', 'AVAX/USDT', 'DOT/USDT', 'MATIC/USDT',
+    'LTC/USDT', 'TRX/USDT', 'SHIB/USDT', 'LINK/USDT', 'ATOM/USDT',
+    'UNI/USDT', 'XMR/USDT', 'ETC/USDT', 'XLM/USDT', 'NEAR/USDT'
+    # Add more up to 100 as needed
+]
